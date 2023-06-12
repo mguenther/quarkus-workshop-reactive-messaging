@@ -21,6 +21,11 @@ public class NotificationService {
 
     @Incoming("incoming-checked-orders")
     public void notify(Event event) {
+        if (event instanceof OrderApprovedEvent) {
+            onOrderApproved((OrderApprovedEvent) event);
+        } else if (event instanceof OrderDeniedEvent) {
+            onOrderDenied((OrderDeniedEvent) event);
+        }
     }
 
     private void onOrderApproved(final OrderApprovedEvent event) {

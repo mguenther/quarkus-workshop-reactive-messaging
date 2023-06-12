@@ -1,6 +1,5 @@
 package workshop.quarkus.reactive;
 
-import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -22,30 +21,28 @@ public class InventoryService {
 
     @Incoming("incoming-orders")
     @Outgoing("outgoing-checked-orders")
-    public Event checkAvailability(Message<OrderSubmittedEvent> message) {
+    public Message<Event> checkAvailability(Message<OrderSubmittedEvent> message) {
 
         var e = message.getPayload();
         var traceId = message.getMetadata(OrderMetadata.class).map(OrderMetadata::traceId).orElse("no-trace-id");
         var available = checker.allLineItemsAvailable(traceId);
 
-        try {
-            return available ?
-                    new OrderApprovedEvent(
-                            e.getOrderId(),
-                            e.getCustomerId(),
-                            e.getProductId(),
-                            e.getQuantity(),
-                            true,
-                            Instant.now(Clock.systemUTC()).toEpochMilli()) :
-                    new OrderDeniedEvent(
-                            e.getOrderId(),
-                            e.getCustomerId(),
-                            e.getProductId(),
-                            e.getQuantity(),
-                            false,
-                            Instant.now(Clock.systemUTC()).toEpochMilli());
-        } finally {
-            message.ack();
-        }
+        return available ?
+                message.withPayload(
+                        new OrderApprovedEvent(
+                                e.getOrderId(),
+                                e.getCustomerId(),
+                                e.getProductId(),
+                                e.getQuantity(),
+                                true,
+                                Instant.now(Clock.systemUTC()).toEpochMilli())) :
+                message.withPayload(
+                        new OrderDeniedEvent(
+                                e.getOrderId(),
+                                e.getCustomerId(),
+                                e.getProductId(),
+                                e.getQuantity(),
+                                false,
+                                Instant.now(Clock.systemUTC()).toEpochMilli()));
     }
 }
