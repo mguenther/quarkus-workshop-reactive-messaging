@@ -219,7 +219,7 @@ public class NotificationService {
 
     private final Set<String> deniedOrdersByOrderId = new HashSet<>();
 
-    @Incoming("checked-orders")
+    @Incoming("incoming-checked-orders")
     public void notify(Event event) {
         if (event instanceof OrderApprovedEvent) {
             onOrderApproved((OrderApprovedEvent) event);
